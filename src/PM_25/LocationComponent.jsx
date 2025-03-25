@@ -2,9 +2,9 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import axios from "axios";
 
-
-const myIcon = new L.Icon({
+const defaultIcon = new L.Icon({
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
@@ -12,44 +12,13 @@ const myIcon = new L.Icon({
 });
 
 const isanBounds = [
-  [14.0, 101.0], 
-  [18.5, 105.0], 
-];
-
-// รายชื่อจังหวัดในภาคอีสานพร้อมพิกัดและรูปภาพ
-const isanProvinces = [
-  { 
-    name: "นครราชสีมา", 
-    lat: 14.9799, 
-    lng: 102.0977,
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Korat_city_gate.jpg/250px-Korat_city_gate.jpg",
-    description: "นครราชสีมา หรือ โคราช เป็นประตูสู่อีสาน"
-  },
-  { 
-    name: "ขอนแก่น", 
-    lat: 16.4322, 
-    lng: 102.8236,
-    image: "https://www.mbkg.co.th/storage/newsroom/video/2022/12/20221201-1.jpg",
-    description: "ขอนแก่นเป็นศูนย์กลางเศรษฐกิจและการศึกษาในอีสาน"
-  },
-  { 
-    name: "อุบลราชธานี", 
-    lat: 15.228, 
-    lng: 104.859,
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Ubon_Ratchathani_Candle_Festival.jpg/250px-Ubon_Ratchathani_Candle_Festival.jpg",
-    description: "อุบลราชธานีมีประเพณีแห่เทียนพรรษาที่โดดเด่น"
-  },
-  { 
-    name: "สกลนคร", 
-    lat: 17.168, 
-    lng: 104.148,
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Sakon_Nakhon_Lake.jpg/250px-Sakon_Nakhon_Lake.jpg",
-    description: "สกลนครมีทะเลสาบที่สวยงามและเป็นเมืองพระพุทธศาสนา"
-  },
+  [14.0, 101.0],
+  [18.5, 105.0],
 ];
 
 const MyLocationMap = () => {
   const [position, setPosition] = useState(null);
+  const [airQualityData, setAirQualityData] = useState([]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -64,49 +33,107 @@ const MyLocationMap = () => {
           ) {
             setPosition([latitude, longitude]);
           } else {
-            setPosition([16.4322, 102.8236]); 
+            setPosition([16.4322, 102.8236]);
           }
         },
         (error) => {
           console.error("ไม่สามารถเข้าถึงตำแหน่ง:", error);
-          setPosition([16.4322, 102.8236]); 
+          setPosition([16.4322, 102.8236]);
         }
       );
     }
   }, []);
 
+  useEffect(() => {
+    const fetchAirQuality = async () => {
+      try {
+        const response = await axios.get("http://localhost:4002/airisan_");
+        console.log(response.data.check_airisans_)
+        if (Array.isArray(response.data.check_airisans_)) {
+          setAirQualityData(response.data.check_airisans_);
+        } else {
+          console.error("Data format is incorrect:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching air quality data:", error);
+      }
+    };
+
+    fetchAirQuality();
+  }, []);
+
+  const getIcon = (pm) => {
+    let iconColor = "green"; 
+
+    if (pm > 39 && pm <= 49) {
+      iconColor = "yellow";
+    } else if (pm >= 50 && pm <= 59) {
+      iconColor = "orange"; 
+    } else if (pm >= 60) {
+      iconColor = "red"; 
+    }
+
+    return new L.divIcon({
+      className: "pm-icon",
+      html: `<div style="background-color:${iconColor}; color: white; border-radius: 50%; padding: 10px; font-size: 14px; text-align: center; width: 40px; height: 40px;">
+              ${pm}
+             </div>`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+      popupAnchor: [0, -20],
+    });
+  };
+
   return (
-    <div className="flex ml-60" >
+    <div className="flex ml-60">
       <div className="w-full h-full">
         <MapContainer
-          center={[16.4322, 102.8236]} 
+          center={[16.4322, 102.8236]}
           zoom={8}
-          style={{ height: "800px", width: "100%" }}
-          maxBounds={isanBounds} 
-          maxBoundsViscosity={1.0} 
+          style={{ height: "800px", width: "100%", borderRadius: "12px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}
+          maxBounds={isanBounds}
+          maxBoundsViscosity={1.0}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-          {/* แสดง Marker ตำแหน่งของผู้ใช้ */}
-          {position && (
-            <Marker position={position} icon={myIcon}>
-              <Popup>ตำแหน่งของคุณอยู่ที่นี่! 📍</Popup>
-            </Marker>
-          )}
-
-          {/* แสดง Marker สำหรับจังหวัดในภาคอีสาน */}
-          {isanProvinces.map((province, index) => (
-            <Marker key={index} position={[province.lat, province.lng]} icon={myIcon}>
-             <Popup className="w-[250px] text-left">
-                <div className="flex flex-col items-start">
-                  <img src={province.image} alt={province.name} className="w-full h-auto rounded-lg mb-2" />
-                  <h3 className="text-lg font-bold mb-1">{province.name}</h3>
-                  <p className="text-sm text-gray-600">{province.description}</p>
-                </div>
+  
+          {/* Marker ตำแหน่งของผู้ใช้ */}
+          {/* {position && (
+            <Marker position={position} icon={defaultIcon}>
+              <Popup className="bg-white p-4 rounded-lg shadow-lg text-center">
+                <h4 className="text-lg font-semibold">ตำแหน่งของคุณอยู่ที่นี่! 📍</h4>
               </Popup>
-
             </Marker>
-          ))}
+          )} */}
+
+          {/* Marker คุณภาพอากาศ */}
+          {airQualityData &&
+            airQualityData.map((air, index) => {
+              const lat = air.airisan_imgae?.lat;
+              const lng = air.airisan_imgae?.lng;
+  
+              if (!lat || !lng) {
+                console.warn(`Skipping marker: Missing coordinates for entry ${index}`, air);
+                return null;
+              }
+
+              const pm = air.PM25;
+
+              return (
+                <Marker key={index} position={[lat, lng]} icon={getIcon(pm)}>
+                  <Popup className="bg-white p-4 rounded-lg shadow-lg text-center">
+                    <h3 className="text-xl font-semibold mb-2">{air?.airisan_imgae?.name_airisan_th || "No District"}</h3>
+                    <p className="text-sm mb-2">{air.airisan_imgae?.description || "No Description Available"}</p>
+                    <p className="text-sm mb-2">PM2.5: {pm}</p>
+                    <img
+                      src={air.airisan_imgae?.img}
+                      alt="Location"
+                      className="w-full h-auto rounded-lg shadow-md mb-2"
+                      style={{ maxHeight: "200px", objectFit: "cover" }}
+                    />
+                  </Popup>
+                </Marker>
+              );
+            })}
         </MapContainer>
       </div>
     </div>

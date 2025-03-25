@@ -5,7 +5,6 @@ import Header from './PM_25/Header';
 import Pm25 from './PM_25/Pm25';
 import Sidebar from './PM_25/sidebar';
 import LocationComponent from './PM_25/LocationComponent';
-import IssanMap from './PM_25/IssanMap';
 
 const Layout = () => (
   <>
@@ -28,9 +27,6 @@ const publicRouter = createBrowserRouter([
   {
     path: '/location',
     element: <LocationComponent/>
-  },{
-    path: '/issanmap',
-    element: <IssanMap/>
   }
     ],
   }

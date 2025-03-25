@@ -17,7 +17,6 @@ const IssanMap = () => {
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
             );
             const data = await response.json();
-            console.log(data.address.province)
             check_Pm25_province(data.address)
             setLocation(data.address.province); 
           } catch (err) {
@@ -35,20 +34,20 @@ const IssanMap = () => {
 
 
   const check_Pm25_province  = (data ) => {
-    console.log(data.province)
     const provinces = [
-      { en: "Amnat Charoen", th: "อำนาจเจริญ" },
-      { en: "Bueng Kan", th: "บึงกาฬ" },
-      { en: "Buri Ram", th: "บุรีรัมย์" },
-      { en: "Chaiyaphum", th: "ชัยภูมิ" },
-      { en: "Kalasin", th: "กาฬสินธุ์" },
-      { en: "Khon Kaen", th: "ขอนแก่น" },
-      { en: "Loei", th: "เลย" },
-      { en: "Maha Sarakham", th: "มหาสารคาม" },
-      { en: "Mukdahan", th: "มุกดาหาร" },
-      { en: "Nakhon Phanom", th: "นครพนม" },
-      { en: "Nakhon Ratchasima", th: "นครราชสีมา" },
-      {en: " SakhonNakhon", th:"จังหวัดสกลนคร"},
+      { en: "Amnat Charoen", th: "จังหวัดอำนาจเจริญ" },
+      { en: "Bueng Kan", th: "จังหวัดบึงกาฬ" },
+      { en: "Buri Ram", th: "จังหวัดบุรีรัมย์" },
+      { en: "Chaiyaphum", th: "จังหวัดชัยภูมิ" },
+      { en: "Kalasin", th: "จังหวัดกาฬสินธุ์" },
+      { en: "Khon Kaen", th: "จังหวัดขอนแก่น" },
+      { en: "Loei", th: "จังหวัดเลย" },
+      { en: "Maha Sarakham", th: "จังหวัดมหาสารคาม" },
+      { en: "Mukdahan", th: "จังหวัดมุกดาหาร" },
+      { en: "Nakhon Phanom", th: "จังหวัดนครพนม", maps: "Nakhon Phanom Province"},
+      { en: "Nakhon Ratchasima", th: "จังหวัดนครราชสีมา" },
+      {en: "SakhonNakhon", th:"จังหวัดสกลนคร"},
+      {en: "", th: "จังหวัดร้อยเอ็ด"}
     ];
     
     const sakonNakhonDistricts = [
@@ -74,21 +73,20 @@ const IssanMap = () => {
     
     if(data.province){
       if(data.sakonNakhonDistricts){
-        console.log('dddd')
         for(i in sakonNakhonDistricts){
-          console.log(sakonNakhonDistricts[i].th)
+          // console.log(sakonNakhonDistricts[i].th)
           if(data.sakonNakhonDistricts === sakonNakhonDistricts[i].th){
-            console.log(sakonNakhonDistricts[i], fff)
+            // console.log(sakonNakhonDistricts[i], fff)
             setDatas(sakonNakhonDistricts[i])
             break;
           }
         }
       }else{
         provinces.map((P) => {
-          if(data.province === P.th){
+          if(data.province === P.th || data.province === P.maps){
             setDatas(P)
             console.log(P, 111)
-          }
+          }  
 
         })
       }
@@ -99,18 +97,7 @@ const IssanMap = () => {
 
   }
 
-  return (
-    <div className="p-4 text-center">
-      <h1 className="text-lg font-bold">ค้นหาตำแหน่งปัจจุบัน</h1>
-      {location ? (
-        <p className="text-green-500 text-xl">คุณอยู่ที่จังหวัด: {location}</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : (
-        <p>กำลังดึงข้อมูลตำแหน่ง...</p>
-      )}
-    </div>
-  );
+  return {datas}
 };
 
 export default IssanMap;

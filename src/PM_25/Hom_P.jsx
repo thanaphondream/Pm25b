@@ -6,24 +6,29 @@ import { WiHumidity } from "react-icons/wi";
 import { RiExpandHeightFill } from "react-icons/ri"
 import { FaLeaf } from "react-icons/fa6";
 import { GiDustCloud } from "react-icons/gi";
+import IssanMap from './IssanMap';
 
 
 function Hom_P() {
   const [airisan, setAirisan] = useState({});
   const [currentDate, setCurrentDate] = useState('');
+  const { datas } = IssanMap() || 1
+  console.log(datas.en,"222  ")
 
   useEffect(() => {
     const fetchAirisanData = async () => {
       try {
-        const response = await axios.get('http://localhost:4002/airisan/3');
-        setAirisan(response.data);
-        console.log(response.data)
+       if(datas){
+        const response = await axios.get(`http://localhost:4002/airisan_province/Ban_Muang`);
+        console.log(response.data, 1155)
+        setAirisan(response.data.check_airisans_province_now_ || response.data.check_airisansdistricts_province || check_airisans_province_now_);
+       }
       } catch (err) {
         console.error('Error fetching airisan data:', err);
       }
     };
     fetchAirisanData();
-  }, []);
+  },[datas.en]);
 
   useEffect(() => {
     const getCurrentDate = () => {
